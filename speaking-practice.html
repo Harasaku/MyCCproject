@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>英語リスニング＆翻訳練習</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    header {
+      width: 100%;
+      padding: 16px 20px;
+      text-align: center;
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    header h1 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      background: linear-gradient(90deg, #a78bfa, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    header p { font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-top: 2px; }
+
+    .container {
+      width: 100%;
+      max-width: 640px;
+      padding: 20px 16px;
+      flex: 1;
+    }
+
+    /* ===== CSV UPLOAD SCREEN ===== */
+    #upload-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 60vh;
+      gap: 24px;
+    }
+    .upload-icon {
+      font-size: 4rem;
+      animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    .upload-card {
+      background: rgba(255,255,255,0.07);
+      border: 2px dashed rgba(167,139,250,0.5);
+      border-radius: 20px;
+      padding: 40px 30px;
+      text-align: center;
+      width: 100%;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .upload-card:hover, .upload-card.drag-over {
+      border-color: #a78bfa;
+      background: rgba(167,139,250,0.1);
+      transform: scale(1.02);
+    }
+    .upload-card h2 { font-size: 1.2rem; margin-bottom: 8px; }
+    .upload-card p { font-size: 0.85rem; color: rgba(255,255,255,0.6); line-height: 1.6; }
+    #csv-file-input { display: none; }
+    .btn-upload {
+      margin-top: 20px;
+      padding: 12px 32px;
+      background: linear-gradient(135deg, #a78bfa, #60a5fa);
+      border: none;
+      border-radius: 50px;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(167,139,250,0.4);
+    }
+    .btn-upload:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(167,139,250,0.5); }
+
+    .csv-hint {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 16px;
+      width: 100%;
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.7);
+      line-height: 1.7;
+    }
+    .csv-hint strong { color: #a78bfa; }
+    .csv-hint code {
+      background: rgba(255,255,255,0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.75rem;
+    }
+
+    /* ===== PRACTICE SCREEN ===== */
+    #practice-screen { display: none; }
+
+    .progress-bar-wrap {
+      background: rgba(255,255,255,0.1);
+      border-radius: 50px;
+      height: 6px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #a78bfa, #60a5fa);
+      border-radius: 50px;
+      transition: width 0.5s ease;
+    }
+    .progress-text {
+      text-align: center;
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.07);
+      backdrop-filter: blur(10px);
+      border-radius: 24px;
+      padding: 28px 24px;
+      border: 1px solid rgba(255,255,255,0.1);
+      margin-bottom: 16px;
+    }
+
+    .label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 10px;
+    }
+
+    .english-text {
+      font-size: 1.5rem;
+      font-weight: 600;
+      line-height: 1.5;
+      color: #fff;
+      letter-spacing: 0.3px;
+    }
+    @media (max-width: 480px) { .english-text { font-size: 1.25rem; } }
+
+    .japanese-text {
+      font-size: 1rem;
+      color: rgba(255,255,255,0.7);
+      line-height: 1.6;
+    }
+
+    /* Controls */
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .btn {
+      padding: 16px 12px;
+      border: none;
+      border-radius: 18px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      touch-action: manipulation;
+    }
+    .btn-icon { font-size: 1.8rem; line-height: 1; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+
+    .btn-listen {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(59,130,246,0.4);
+    }
+    .btn-listen:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59,130,246,0.5); }
+    .btn-listen.speaking { background: linear-gradient(135deg, #1d4ed8, #1e40af); }
+
+    .btn-answer {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(16,185,129,0.4);
+    }
+    .btn-answer:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16,185,129,0.5); }
+    .btn-answer.answered {
+      background: linear-gradient(135deg, #6b7280, #4b5563);
+      box-shadow: none;
+    }
+
+    /* Japanese card reveal animation */
+    #japanese-card {
+      animation: slideDown 0.35s ease;
+    }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Navigation */
+    .nav-controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .btn-nav {
+      padding: 14px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.07);
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .btn-nav:hover:not(:disabled) { background: rgba(255,255,255,0.15); }
+    .btn-nav:disabled { opacity: 0.3; cursor: not-allowed; }
+    .btn-nav-next {
+      background: linear-gradient(135deg, #a78bfa, #7c3aed);
+      border-color: transparent;
+      box-shadow: 0 4px 15px rgba(167,139,250,0.3);
+    }
+    .btn-nav-next:hover:not(:disabled) { transform: translateY(-2px); }
+
+    /* TTS settings */
+    .tts-settings { padding: 16px 20px; margin-bottom: 12px; }
+    .tts-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .speed-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+    .speed-btn {
+      padding: 6px 12px;
+      border-radius: 50px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.07);
+      color: rgba(255,255,255,0.7);
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .speed-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+    .speed-btn.active {
+      background: linear-gradient(135deg, #a78bfa, #60a5fa);
+      border-color: transparent;
+      color: #fff;
+      font-weight: 600;
+    }
+    #voice-select {
+      flex: 1;
+      min-width: 0;
+      padding: 6px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.07);
+      color: #fff;
+      font-size: 0.82rem;
+      cursor: pointer;
+      outline: none;
+    }
+    #voice-select option { background: #1a1a2e; color: #fff; }
+
+    /* Error panel */
+    .error-panel {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.35);
+      border-radius: 16px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .error-icon { font-size: 1.5rem; }
+    .error-panel p {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.85);
+      line-height: 1.6;
+    }
+    .error-panel button {
+      align-self: flex-start;
+      padding: 6px 16px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 50px;
+      color: #fff;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .error-panel button:hover { background: rgba(255,255,255,0.18); }
+
+    .btn-reset {
+      display: block;
+      width: 100%;
+      margin-top: 16px;
+      padding: 12px;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 12px;
+      color: rgba(255,255,255,0.5);
+      font-size: 0.8rem;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.3s;
+    }
+    .btn-reset:hover { color: rgba(255,255,255,0.8); border-color: rgba(255,255,255,0.3); }
+
+    /* Status message */
+    .status-msg {
+      text-align: center;
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.5);
+      padding: 8px;
+      min-height: 32px;
+    }
+    .status-msg.active { color: #a78bfa; }
+    .status-msg.error  { color: #f87171; }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: rgba(30,30,50,0.95);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 50px;
+      padding: 12px 24px;
+      font-size: 0.85rem;
+      color: #fff;
+      transition: transform 0.3s ease;
+      white-space: nowrap;
+      z-index: 9999;
+      backdrop-filter: blur(10px);
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>📖 英語リスニング＆翻訳練習</h1>
+  <p>English Listening & Translation Practice</p>
+</header>
+
+<div class="container">
+
+  <!-- UPLOAD SCREEN -->
+  <div id="upload-screen">
+    <div class="upload-card" id="drop-zone">
+      <div class="upload-icon">📂</div>
+      <h2>CSVファイルを読み込む</h2>
+      <p>英文と日本語訳が入ったCSVファイルを<br>アップロードしてください</p>
+      <button class="btn-upload" onclick="document.getElementById('csv-file-input').click()">
+        ファイルを選択
+      </button>
+      <input type="file" id="csv-file-input" accept=".csv">
+    </div>
+
+    <div class="csv-hint">
+      <strong>📋 CSVファイルの形式</strong><br><br>
+      1列目：英文、2列目：日本語訳<br>
+      例：<code>I love learning English,英語を学ぶのが大好きです</code><br><br>
+      ヘッダー行は自動的にスキップされます。<br>
+      文字コードは <strong>UTF-8</strong> を推奨します。
+    </div>
+  </div>
+
+  <!-- PRACTICE SCREEN -->
+  <div id="practice-screen">
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progress-fill"></div>
+    </div>
+    <div class="progress-text" id="progress-text"></div>
+
+    <!-- English -->
+    <div class="card">
+      <div class="label">English</div>
+      <div class="english-text" id="english-display"></div>
+    </div>
+
+    <!-- Japanese (hidden until 回答 pressed) -->
+    <div class="card" id="japanese-card" style="display:none">
+      <div class="label">日本語訳</div>
+      <div class="japanese-text" id="japanese-display"></div>
+    </div>
+
+    <!-- Speed & Voice controls -->
+    <div class="tts-settings card">
+      <div class="tts-row">
+        <span class="label" style="margin-bottom:0">読み上げ速度</span>
+        <div class="speed-btns">
+          <button class="speed-btn" data-rate="0.6"  onclick="setRate(0.6,this)">🐢 ゆっくり</button>
+          <button class="speed-btn active" data-rate="0.8" onclick="setRate(0.8,this)">🚶 普通</button>
+          <button class="speed-btn" data-rate="1.1" onclick="setRate(1.1,this)">🐇 はやい</button>
+        </div>
+      </div>
+      <div class="tts-row" style="margin-top:12px">
+        <span class="label" style="margin-bottom:0">音声</span>
+        <select id="voice-select" onchange="setVoice(this.value)"></select>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <button class="btn btn-listen" id="btn-listen" onclick="speakEnglish()">
+        <span class="btn-icon">🔊</span>
+        <span>手本を聞く</span>
+      </button>
+      <button class="btn btn-answer" id="btn-answer" onclick="revealAnswer()">
+        <span class="btn-icon">💡</span>
+        <span>回答</span>
+      </button>
+    </div>
+
+    <div class="status-msg" id="status-msg">英文を読んで日本語訳を考えたら「回答」を押してください</div>
+
+    <!-- Navigation -->
+    <div class="nav-controls">
+      <button class="btn-nav" id="btn-prev" onclick="navigate(-1)">← 前へ</button>
+      <button class="btn-nav btn-nav-next" id="btn-next" onclick="navigate(1)">次へ →</button>
+    </div>
+
+    <button class="btn-reset" onclick="resetToUpload()">📂 別のCSVを読み込む</button>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== STATE =====
+let sentences = [];
+let currentIndex = 0;
+let isSpeaking = false;
+let synth = window.speechSynthesis;
+
+// ===== CSV PARSE =====
+function parseCSV(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  const results = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const cols = parseCSVLine(lines[i]);
+    if (cols.length < 2) continue;
+    const en = cols[0].trim();
+    const ja = cols[1].trim();
+    if (!en) continue;
+
+    // Skip header row
+    if (i === 0 && /^(english|英文|en|sentence)/i.test(en)) continue;
+
+    results.push({ en, ja });
+  }
+  return results;
+}
+
+function parseCSVLine(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i+1] === '"') { current += '"'; i++; }
+      else inQuotes = !inQuotes;
+    } else if (ch === ',' && !inQuotes) {
+      result.push(current); current = '';
+    } else {
+      current += ch;
+    }
+  }
+  result.push(current);
+  return result;
+}
+
+// ===== FILE UPLOAD =====
+const fileInput = document.getElementById('csv-file-input');
+const dropZone  = document.getElementById('drop-zone');
+
+fileInput.addEventListener('change', e => {
+  if (e.target.files[0]) loadFile(e.target.files[0]);
+});
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.name.endsWith('.csv')) loadFile(file);
+  else showToast('CSVファイルを選択してください');
+});
+
+function loadFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const data = parseCSV(e.target.result);
+    if (data.length === 0) { showToast('有効なデータが見つかりませんでした'); return; }
+    sentences = data;
+    currentIndex = 0;
+    startPractice();
+    showToast(`${data.length}件の文章を読み込みました`);
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+// ===== SCREEN SWITCH =====
+function startPractice() {
+  document.getElementById('upload-screen').style.display = 'none';
+  document.getElementById('practice-screen').style.display = 'block';
+  loadSentence();
+}
+
+function resetToUpload() {
+  synth.cancel();
+  document.getElementById('upload-screen').style.display = 'flex';
+  document.getElementById('practice-screen').style.display = 'none';
+  fileInput.value = '';
+}
+
+// ===== SENTENCE DISPLAY =====
+function loadSentence() {
+  const s = sentences[currentIndex];
+  document.getElementById('english-display').textContent = s.en;
+  document.getElementById('japanese-display').textContent = s.ja || '（日本語訳なし）';
+
+  const pct = ((currentIndex + 1) / sentences.length) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-text').textContent = `${currentIndex + 1} / ${sentences.length}`;
+
+  document.getElementById('btn-prev').disabled = currentIndex === 0;
+  document.getElementById('btn-next').disabled = currentIndex === sentences.length - 1;
+
+  // Hide Japanese card, reset 回答 button
+  document.getElementById('japanese-card').style.display = 'none';
+  const ansBtn = document.getElementById('btn-answer');
+  ansBtn.classList.remove('answered');
+  ansBtn.querySelector('span:first-child').textContent = '💡';
+  ansBtn.querySelector('span:last-child').textContent = '回答';
+  ansBtn.disabled = false;
+
+  setStatus('英文を読んで日本語訳を考えたら「回答」を押してください', '');
+}
+
+// ===== REVEAL ANSWER =====
+function revealAnswer() {
+  const card = document.getElementById('japanese-card');
+  card.style.display = 'block';
+
+  const ansBtn = document.getElementById('btn-answer');
+  ansBtn.classList.add('answered');
+  ansBtn.querySelector('span:first-child').textContent = '✅';
+  ansBtn.querySelector('span:last-child').textContent = '確認済み';
+
+  setStatus('日本語訳を確認してください。読み上げも使えます。', 'active');
+}
+
+function navigate(dir) {
+  synth.cancel();
+  currentIndex = Math.max(0, Math.min(sentences.length - 1, currentIndex + dir));
+  loadSentence();
+}
+
+// ===== TTS SETTINGS =====
+let currentRate = 0.8;
+let selectedVoiceName = '';
+let allEnVoices = [];
+
+// Voice priority scoring: prefer natural/premium voices
+function voiceScore(v) {
+  const name = v.name.toLowerCase();
+  let score = 0;
+  if (v.lang === 'en-US') score += 10;
+  else if (v.lang.startsWith('en')) score += 5;
+  // Prefer system/premium voices over basic TTS
+  if (name.includes('samantha') || name.includes('karen') || name.includes('daniel')) score += 8;
+  if (name.includes('zira') || name.includes('david') || name.includes('mark')) score += 6;
+  if (name.includes('natural') || name.includes('neural') || name.includes('premium')) score += 7;
+  if (name.includes('siri')) score += 6;
+  // Avoid very robotic ones
+  if (name.includes('espeak') || name.includes('festival')) score -= 5;
+  return score;
+}
+
+function populateVoiceList() {
+  const all = synth.getVoices();
+  allEnVoices = all.filter(v => v.lang.startsWith('en')).sort((a, b) => voiceScore(b) - voiceScore(a));
+  if (allEnVoices.length === 0) return;
+
+  const sel = document.getElementById('voice-select');
+  sel.innerHTML = '';
+  allEnVoices.forEach((v, i) => {
+    const opt = document.createElement('option');
+    opt.value = v.name;
+    opt.textContent = `${v.name} (${v.lang})`;
+    sel.appendChild(opt);
+  });
+
+  // Auto-select best voice if none chosen
+  if (!selectedVoiceName) {
+    selectedVoiceName = allEnVoices[0].name;
+    sel.value = selectedVoiceName;
+  } else {
+    sel.value = selectedVoiceName;
+  }
+}
+
+function setRate(rate, btn) {
+  currentRate = rate;
+  document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function setVoice(name) {
+  selectedVoiceName = name;
+}
+
+// ===== TTS =====
+function speakEnglish() {
+  if (isSpeaking) { synth.cancel(); return; }
+
+  const text = sentences[currentIndex].en;
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.lang = 'en-US';
+  utt.rate = currentRate;
+  utt.pitch = 1;
+  utt.volume = 1;
+
+  // Use selected voice
+  const voices = synth.getVoices();
+  const chosenVoice = voices.find(v => v.name === selectedVoiceName)
+    || voices.find(v => v.lang === 'en-US')
+    || voices.find(v => v.lang.startsWith('en'));
+  if (chosenVoice) utt.voice = chosenVoice;
+
+  utt.onstart = () => {
+    isSpeaking = true;
+    const btn = document.getElementById('btn-listen');
+    btn.classList.add('speaking');
+    btn.querySelector('span:last-child').textContent = '停止';
+    setStatus('読み上げ中...', 'active');
+  };
+  utt.onend = utt.onerror = () => {
+    isSpeaking = false;
+    const btn = document.getElementById('btn-listen');
+    btn.classList.remove('speaking');
+    btn.querySelector('span:last-child').textContent = '手本を聞く';
+    setStatus('英文を読んで日本語訳を考えたら「回答」を押してください', '');
+  };
+
+  synth.speak(utt);
+}
+
+
+// ===== UTILS =====
+function setStatus(msg, cls) {
+  const el = document.getElementById('status-msg');
+  el.textContent = msg;
+  el.className = 'status-msg' + (cls ? ' ' + cls : '');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Load voices asynchronously
+if (synth.onvoiceschanged !== undefined) {
+  synth.onvoiceschanged = () => populateVoiceList();
+}
+// Also try immediately (some browsers have voices ready on load)
+setTimeout(populateVoiceList, 200);
+</script>
+</body>
+</html>
